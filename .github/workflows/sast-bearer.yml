@@ -17,7 +17,7 @@ jobs:                                                   # Lista de trabajos del 
     runs-on: ubuntu-latest                              # Máquina virtual Linux donde corre (Bearer no es nativo de Windows)
     steps:                                              # Pasos que se ejecutan en orden
       - name: Descargar el código                       # Paso 1: checkout del repositorio
-        uses: actions/checkout@v4                       # Acción oficial que clona el repositorio en el runner
+        uses: actions/checkout@v5                       # Acción oficial que clona el repositorio en el runner
 
       - name: Ejecutar Bearer y generar SARIF           # Paso 2: escaneo de todo el repositorio en formato SARIF
         uses: bearer/bearer-action@v2                   # Acción oficial de Bearer que instala y ejecuta Bearer CLI
@@ -29,7 +29,7 @@ jobs:                                                   # Lista de trabajos del 
 
       - name: Subir SARIF a Code scanning               # Paso 3: publica los hallazgos en Security > Code scanning
         if: always()                                    # Se ejecuta siempre, aunque el paso anterior falle o encuentre vulnerabilidades
-        uses: github/codeql-action/upload-sarif@v3      # Acción oficial de GitHub para cargar archivos SARIF
+        uses: github/codeql-action/upload-sarif@v4      # Acción oficial de GitHub para cargar archivos SARIF
         with:                                           # Parámetros de la acción
           sarif_file: bearer.sarif                      # Ruta del SARIF generado por Bearer
           category: bearer                              # Categoría para distinguir estos resultados de otras herramientas

@@ -1,0 +1,46 @@
+name: Bearer CLI - opciones (equivalente al análisis local)   # Workflow manual que replica los comandos del análisis local
+
+on:                                                     # Eventos que disparan el workflow
+  workflow_dispatch:                                    # Solo se ejecuta manualmente (Actions > Run workflow)
+
+permissions:                                            # Permisos mínimos
+  contents: read                                        # Solo lectura del código
+
+jobs:                                                   # Trabajos
+  bearer-cli:                                           # Identificador del trabajo
+    name: Bearer CLI en terminal Linux                  # Nombre visible
+    runs-on: ubuntu-latest                              # Runner Linux (igual que WSL/Ubuntu)
+    steps:                                              # Pasos
+      - name: Descargar el código                       # Clona el repositorio
+        uses: actions/checkout@v5                       # Acción oficial de checkout
+
+      - name: Instalar Bearer CLI (mismo script que en WSL)   # Instalación idéntica a la del laboratorio
+        run: |                                          # Comandos de shell
+          cd ~                                          # Directorio home
+          curl -sfL https://raw.githubusercontent.com/Bearer/bearer/main/contrib/install.sh | sh   # Descarga Bearer en ./bin
+          sudo mv ./bin/bearer /usr/local/bin/          # Lo deja disponible en todo el sistema
+          bearer version                                # Verifica la instalación
+
+      - name: "bearer scan . (salida en terminal)"      # Escaneo básico con salida de texto
+        run: bearer scan . --exit-code 0                # Escanea todo el repo sin fallar el paso
+
+      - name: "Reporte HTML en la carpeta reportes/"    # Punto 5: reporte HTML
+        run: |                                          # Comandos de shell
+          mkdir -p reportes                             # Crea la carpeta de reportes
+          bearer scan . --format html --output reportes/reporte-bearer.html --exit-code 0 --quiet   # Genera el HTML
+
+      - name: "Reporte SARIF"                           # Punto 6: reporte SARIF
+        run: bearer scan . --format sarif --output reportes/bearer.sarif --exit-code 0 --quiet      # Genera el SARIF
+
+      - name: "Filtrar por severidad (critical, high)"  # Punto 7: solo hallazgos critical y high
+        run: bearer scan . --severity critical,high --exit-code 0   # Filtra la salida por severidad
+
+      - name: "Excluir carpetas que no son código de la app"   # Punto 8: excluir pruebas y snippets de retos
+        run: bearer scan . --severity critical,high --skip-path "test,frontend/src/**/*.spec.ts,data/static/codefixes,scripts" --exit-code 0   # Omite rutas no productivas
+
+      - name: Guardar reportes                          # Publica los reportes generados
+        if: always()                                    # Siempre, aunque falle algún paso
+        uses: actions/upload-artifact@v4                # Acción oficial de artefactos
+        with:                                           # Parámetros
+          name: reportes-bearer-cli                     # Nombre del artefacto
+          path: reportes/                               # Carpeta a subir
