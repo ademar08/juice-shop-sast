@@ -36,7 +36,7 @@ jobs:                                                   # Trabajos
         run: bearer scan . --severity critical,high --exit-code 0   # Filtra la salida por severidad
 
       - name: "Excluir carpetas que no son código de la app"   # Punto 8: excluir pruebas y snippets de retos
-        run: bearer scan . --severity critical,high --skip-path "test,frontend/src/**/*.spec.ts,data/static/codefixes,scripts" --exit-code 0   # Omite rutas no productivas
+        run: bearer scan . --force --severity critical,high --skip-path "test/**,frontend/src/**/*.spec.ts,data/static/codefixes/**,scripts/**" --exit-code 0   # Omite rutas no productivas (--force evita usar la caché del escaneo anterior)
 
       - name: Guardar reportes                          # Publica los reportes generados
         if: always()                                    # Siempre, aunque falle algún paso
